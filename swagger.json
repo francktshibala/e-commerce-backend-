@@ -1,0 +1,749 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "title": "E-commerce API",
+      "description": "A RESTful API for an e-commerce platform with OAuth 2.0 authentication.",
+      "version": "1.0.0"
+    },
+    "servers": [
+      {
+        "url": "/api",
+        "description": "API server"
+      }
+    ],
+    "components": {
+      "securitySchemes": {
+        "bearerAuth": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "JWT"
+        }
+      },
+      "schemas": {
+        "User": {
+          "type": "object",
+          "properties": {
+            "_id": {
+              "type": "string",
+              "description": "User ID"
+            },
+            "name": {
+              "type": "string",
+              "description": "User's full name"
+            },
+            "email": {
+              "type": "string",
+              "description": "User's email address"
+            },
+            "role": {
+              "type": "string",
+              "enum": ["customer", "admin"],
+              "description": "User role"
+            },
+            "method": {
+              "type": "string",
+              "enum": ["local", "google"],
+              "description": "Authentication method"
+            },
+            "phone": {
+              "type": "string",
+              "description": "User's phone number"
+            },
+            "addresses": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Address"
+              }
+            },
+            "isActive": {
+              "type": "boolean",
+              "description": "Whether the user account is active"
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updatedAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "Address": {
+          "type": "object",
+          "properties": {
+            "_id": {
+              "type": "string",
+              "description": "Address ID"
+            },
+            "name": {
+              "type": "string",
+              "description": "Full name for the address"
+            },
+            "street": {
+              "type": "string",
+              "description": "Street address"
+            },
+            "city": {
+              "type": "string",
+              "description": "City"
+            },
+            "state": {
+              "type": "string",
+              "description": "State/Province"
+            },
+            "zipCode": {
+              "type": "string",
+              "description": "Zip/Postal code"
+            },
+            "country": {
+              "type": "string",
+              "description": "Country"
+            },
+            "isDefault": {
+              "type": "boolean",
+              "description": "Whether this is the default address"
+            }
+          }
+        },
+        "Product": {
+          "type": "object",
+          "properties": {
+            "_id": {
+              "type": "string",
+              "description": "Product ID"
+            },
+            "name": {
+              "type": "string",
+              "description": "Product name"
+            },
+            "slug": {
+              "type": "string",
+              "description": "URL-friendly version of name"
+            },
+            "description": {
+              "type": "string",
+              "description": "Product description"
+            },
+            "price": {
+              "type": "number",
+              "description": "Product price"
+            },
+            "compareAtPrice": {
+              "type": "number",
+              "description": "Original price (for sale items)"
+            },
+            "sku": {
+              "type": "string",
+              "description": "Stock keeping unit"
+            },
+            "inventory": {
+              "type": "object",
+              "properties": {
+                "quantity": {
+                  "type": "number",
+                  "description": "Total inventory quantity"
+                },
+                "reserved": {
+                  "type": "number",
+                  "description": "Reserved quantity (ordered but not shipped)"
+                },
+                "available": {
+                  "type": "number",
+                  "description": "Available quantity"
+                }
+              }
+            },
+            "images": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "description": "Image URL"
+                  },
+                  "alt": {
+                    "type": "string",
+                    "description": "Image alt text"
+                  },
+                  "isMain": {
+                    "type": "boolean",
+                    "description": "Whether this is the main product image"
+                  }
+                }
+              }
+            },
+            "categories": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Category ID"
+              }
+            },
+            "brand": {
+              "type": "string",
+              "description": "Product brand"
+            },
+            "isPublished": {
+              "type": "boolean",
+              "description": "Whether the product is published"
+            },
+            "isFeatured": {
+              "type": "boolean",
+              "description": "Whether the product is featured"
+            },
+            "averageRating": {
+              "type": "number",
+              "description": "Average review rating"
+            },
+            "reviewCount": {
+              "type": "number",
+              "description": "Number of reviews"
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updatedAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "Category": {
+          "type": "object",
+          "properties": {
+            "_id": {
+              "type": "string",
+              "description": "Category ID"
+            },
+            "name": {
+              "type": "string",
+              "description": "Category name"
+            },
+            "slug": {
+              "type": "string",
+              "description": "URL-friendly version of name"
+            },
+            "description": {
+              "type": "string",
+              "description": "Category description"
+            },
+            "parent": {
+              "type": "string",
+              "description": "Parent category ID"
+            },
+            "ancestors": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "_id": {
+                    "type": "string",
+                    "description": "Ancestor category ID"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Ancestor category name"
+                  },
+                  "slug": {
+                    "type": "string",
+                    "description": "Ancestor category slug"
+                  }
+                }
+              }
+            },
+            "image": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "description": "Image URL"
+                },
+                "alt": {
+                  "type": "string",
+                  "description": "Image alt text"
+                }
+              }
+            },
+            "isActive": {
+              "type": "boolean",
+              "description": "Whether the category is active"
+            },
+            "level": {
+              "type": "number",
+              "description": "Category level in hierarchy"
+            },
+            "order": {
+              "type": "number",
+              "description": "Display order"
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updatedAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "Order": {
+          "type": "object",
+          "properties": {
+            "_id": {
+              "type": "string",
+              "description": "Order ID"
+            },
+            "orderNumber": {
+              "type": "string",
+              "description": "Unique order number"
+            },
+            "user": {
+              "type": "string",
+              "description": "User ID"
+            },
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "product": {
+                    "type": "string",
+                    "description": "Product ID"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Product name"
+                  },
+                  "price": {
+                    "type": "number",
+                    "description": "Product price"
+                  },
+                  "quantity": {
+                    "type": "number",
+                    "description": "Quantity ordered"
+                  },
+                  "image": {
+                    "type": "string",
+                    "description": "Product image URL"
+                  },
+                  "sku": {
+                    "type": "string",
+                    "description": "Product SKU"
+                  }
+                }
+              }
+            },
+            "billing": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Billing name"
+                },
+                "email": {
+                  "type": "string",
+                  "description": "Billing email"
+                },
+                "phone": {
+                  "type": "string",
+                  "description": "Billing phone"
+                },
+                "address": {
+                  "$ref": "#/components/schemas/Address"
+                }
+              }
+            },
+            "shipping": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Shipping name"
+                },
+                "address": {
+                  "$ref": "#/components/schemas/Address"
+                },
+                "method": {
+                  "type": "string",
+                  "description": "Shipping method"
+                },
+                "cost": {
+                  "type": "number",
+                  "description": "Shipping cost"
+                },
+                "trackingNumber": {
+                  "type": "string",
+                  "description": "Tracking number"
+                },
+                "estimatedDelivery": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Estimated delivery date"
+                }
+              }
+            },
+            "payment": {
+              "type": "object",
+              "properties": {
+                "method": {
+                  "type": "string",
+                  "enum": ["credit_card", "paypal", "stripe", "bank_transfer"],
+                  "description": "Payment method"
+                },
+                "transactionId": {
+                  "type": "string",
+                  "description": "Payment transaction ID"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": ["pending", "processing", "completed", "failed", "refunded"],
+                  "description": "Payment status"
+                },
+                "paidAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Payment date"
+                }
+              }
+            },
+            "subtotal": {
+              "type": "number",
+              "description": "Order subtotal"
+            },
+            "tax": {
+              "type": "number",
+              "description": "Tax amount"
+            },
+            "discount": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Discount code"
+                },
+                "amount": {
+                  "type": "number",
+                  "description": "Discount amount"
+                }
+              }
+            },
+            "total": {
+              "type": "number",
+              "description": "Order total"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["pending", "processing", "shipped", "delivered", "cancelled", "refunded"],
+              "description": "Order status"
+            },
+            "notes": {
+              "type": "string",
+              "description": "Order notes"
+            },
+            "statusHistory": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "description": "Status"
+                  },
+                  "timestamp": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Status change time"
+                  },
+                  "comment": {
+                    "type": "string",
+                    "description": "Status change comment"
+                  },
+                  "updatedBy": {
+                    "type": "string",
+                    "description": "User ID who updated status"
+                  }
+                }
+              }
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updatedAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "Review": {
+          "type": "object",
+          "properties": {
+            "_id": {
+              "type": "string",
+              "description": "Review ID"
+            },
+            "user": {
+              "type": "string",
+              "description": "User ID"
+            },
+            "product": {
+              "type": "string",
+              "description": "Product ID"
+            },
+            "rating": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 5,
+              "description": "Rating (1-5)"
+            },
+            "title": {
+              "type": "string",
+              "description": "Review title"
+            },
+            "comment": {
+              "type": "string",
+              "description": "Review comment"
+            },
+            "images": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "description": "Image URL"
+                  },
+                  "alt": {
+                    "type": "string",
+                    "description": "Image alt text"
+                  }
+                }
+              }
+            },
+            "isVerifiedPurchase": {
+              "type": "boolean",
+              "description": "Whether review is from a verified purchase"
+            },
+            "isApproved": {
+              "type": "boolean",
+              "description": "Whether review is approved"
+            },
+            "likes": {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "number",
+                  "description": "Number of likes"
+                },
+                "users": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "User ID"
+                  }
+                }
+              }
+            },
+            "response": {
+              "type": "object",
+              "properties": {
+                "comment": {
+                  "type": "string",
+                  "description": "Response comment"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Response creation time"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Response update time"
+                },
+                "user": {
+                  "type": "string",
+                  "description": "Responding user ID"
+                }
+              }
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updatedAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "Error": {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean",
+              "example": false
+            },
+            "message": {
+              "type": "string"
+            },
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "field": {
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "security": [
+      {
+        "bearerAuth": []
+      }
+    ],
+    "paths": {
+      "/auth/register": {
+        "post": {
+          "summary": "Register a new user",
+          "tags": ["Authentication"],
+          "security": [],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "password": {
+                      "type": "string",
+                      "format": "password"
+                    }
+                  },
+                  "required": ["name", "email", "password"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "User registered successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "token": {
+                        "type": "string"
+                      },
+                      "user": {
+                        "$ref": "#/components/schemas/User"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/auth/login": {
+        "post": {
+          "summary": "Login user",
+          "tags": ["Authentication"],
+          "security": [],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "email": {
+                      "type": "string"
+                    },
+                    "password": {
+                      "type": "string",
+                      "format": "password"
+                    }
+                  },
+                  "required": ["email", "password"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Login successful",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "token": {
+                        "type": "string"
+                      },
+                      "user": {
+                        "$ref": "#/components/schemas/User"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }

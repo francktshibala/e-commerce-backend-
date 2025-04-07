@@ -17,7 +17,7 @@ const categoryRoutes = require('./routes/category.routes');
 const reviewRoutes = require('./routes/review.routes');
 
 // Import middleware
-const errorMiddleware = require('./middleware/error.middleware');
+const { notFound, errorHandler } = require('./middleware/error.middleware');
 
 // Initialize Express app
 const app = express();
@@ -72,7 +72,8 @@ app.get('/', (req, res) => {
 });
 
 // Error middleware should be last
-app.use(errorMiddleware);
+app.use(notFound);  // Handle 404 errors for unmatched routes
+app.use(errorHandler);  // Handle all errors
 
 // Start server
 app.listen(PORT, () => {
