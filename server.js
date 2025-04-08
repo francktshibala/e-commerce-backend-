@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const passport = require('passport');
-const swaggerJsdoc = require('swagger-jsdoc');
+const fs = require('fs');
 const swaggerUi = require('swagger-ui-express');
 const rateLimit = require('express-rate-limit');
 
@@ -55,304 +55,110 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/reviews', reviewRoutes);
 
-// Swagger documentation configuration
-const swaggerOptions = {
-  definition: {
-    openapi: '3.0.0',
+// Load Swagger JSON file
+let swaggerDocument;
+try {
+  swaggerDocument = JSON.parse(fs.readFileSync('./swagger.json', 'utf8'));
+} catch (error) {
+  console.error('Error loading swagger.json file:', error);
+  // Fallback to a basic Swagger document if file not found
+  swaggerDocument = {
+    openapi: "3.0.3",
     info: {
-      title: 'E-commerce API',
-      version: '1.0.0',
-      description: 'A RESTful API for an e-commerce platform with OAuth 2.0 authentication',
+      title: "E-Commerce API",
+      description: "API documentation for the e-commerce backend with OAuth 2.0 authentication",
+      version: "1.0.0"
     },
     servers: [
       {
-        url: '/api',
-        description: 'API server',
-      },
-    ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-        },
-      },
-      schemas: {
-        User: {
-          type: 'object',
-          properties: {
-            _id: { type: 'string', description: 'User ID' },
-            name: { type: 'string', description: 'User full name' },
-            email: { type: 'string', description: 'User email address' },
-            role: { type: 'string', enum: ['customer', 'admin'], description: 'User role' },
-            // Add other user properties here
-          }
-        },
-        Product: {
-          type: 'object',
-          properties: {
-            _id: { type: 'string', description: 'Product ID' },
-            name: { type: 'string', description: 'Product name' },
-            description: { type: 'string', description: 'Product description' },
-            price: { type: 'number', description: 'Product price' },
-            // Add other product properties here
-          }
-        },
-        Category: {
-          type: 'object',
-          properties: {
-            _id: { type: 'string', description: 'Category ID' },
-            name: { type: 'string', description: 'Category name' },
-            slug: { type: 'string', description: 'URL-friendly version of name' },
-            // Add other category properties here
-          }
-        },
-        Order: {
-          type: 'object',
-          properties: {
-            _id: { type: 'string', description: 'Order ID' },
-            orderNumber: { type: 'string', description: 'Unique order number' },
-            status: { type: 'string', description: 'Order status' },
-            // Add other order properties here
-          }
-        },
-        Review: {
-          type: 'object',
-          properties: {
-            _id: { type: 'string', description: 'Review ID' },
-            product: { type: 'string', description: 'Product ID' },
-            rating: { type: 'number', description: 'Rating (1-5)' },
-            // Add other review properties here
-          }
-        },
-        Error: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean', example: false },
-            message: { type: 'string' },
-            errors: { 
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  field: { type: 'string' },
-                  message: { type: 'string' }
-                }
-              }
-            }
-          }
-        }
+        url: "http://localhost:5000/api",
+        description: "Local server"
       }
-    },
-    security: [
+    ],
+    tags: [
       {
-        bearerAuth: [],
+        name: "Authentication",
+        description: "Authentication operations"
       },
+      {
+        name: "Products",
+        description: "Product management"
+      },
+      {
+        name: "Categories",
+        description: "Category management"
+      },
+      {
+        name: "Orders",
+        description: "Order management"
+      },
+      {
+        name: "Reviews",
+        description: "Product review management"
+      },
+      {
+        name: "Users",
+        description: "User management (Admin only)"
+      }
     ],
-  },
-  apis: ['./routes/*.js'], // Point to your route files
-};
-
-// Generate Swagger documentation
-const swaggerDocs = swaggerJsdoc(swaggerOptions);
-
-// Add manual path definitions for important endpoints
-// This ensures some endpoints are documented even without JSDoc in route files
-swaggerDocs.paths = {
-  ...swaggerDocs.paths,
-  '/auth/register': {
-    post: {
-      tags: ['Authentication'],
-      summary: 'Register a new user',
-      requestBody: {
-        required: true,
-        content: {
-          'application/json': {
-            schema: {
-              type: 'object',
-              required: ['name', 'email', 'password', 'method'],
-              properties: {
-                name: { type: 'string' },
-                email: { type: 'string' },
-                password: { type: 'string' },
-                method: { type: 'string', enum: ['local'] }
-              }
+    paths: {
+      "/orders/{id}/cancel": {
+        "post": {
+          "summary": "Cancel an order",
+          "tags": ["Orders"],
+          "security": [{ "bearerAuth": [] }],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": { "type": "string" }
             }
-          }
-        }
-      },
-      responses: {
-        '201': {
-          description: 'User registered successfully'
-        }
-      }
-    }
-  },
-  '/auth/login': {
-    post: {
-      tags: ['Authentication'],
-      summary: 'Login with email and password',
-      requestBody: {
-        required: true,
-        content: {
-          'application/json': {
-            schema: {
-              type: 'object',
-              required: ['email', 'password'],
-              properties: {
-                email: { type: 'string' },
-                password: { type: 'string' }
-              }
-            }
-          }
-        }
-      },
-      responses: {
-        '200': {
-          description: 'Login successful'
-        }
-      }
-    }
-  },
-  '/products': {
-    get: {
-      tags: ['Products'],
-      summary: 'Get all products',
-      parameters: [
-        { name: 'page', in: 'query', schema: { type: 'integer' }, description: 'Page number' },
-        { name: 'limit', in: 'query', schema: { type: 'integer' }, description: 'Items per page' },
-        { name: 'category', in: 'query', schema: { type: 'string' }, description: 'Filter by category ID' }
-      ],
-      responses: {
-        '200': {
-          description: 'List of products'
-        }
-      }
-    },
-    post: {
-      tags: ['Products'],
-      summary: 'Create a new product',
-      security: [{ bearerAuth: [] }],
-      requestBody: {
-        required: true,
-        content: {
-          'application/json': {
-            schema: {
-              type: 'object',
-              required: ['name', 'description', 'price', 'sku', 'inventory', 'categories'],
-              properties: {
-                name: { type: 'string' },
-                description: { type: 'string' },
-                price: { type: 'number' },
-                sku: { type: 'string' },
-                inventory: {
-                  type: 'object',
-                  properties: {
-                    quantity: { type: 'integer' }
-                  }
-                },
-                categories: {
-                  type: 'array',
-                  items: { type: 'string' }
-                }
-              }
-            }
-          }
-        }
-      },
-      responses: {
-        '201': {
-          description: 'Product created successfully'
-        }
-      }
-    }
-  },
-  '/categories': {
-    get: {
-      tags: ['Categories'],
-      summary: 'Get all categories',
-      responses: {
-        '200': {
-          description: 'List of categories'
-        }
-      }
-    },
-    post: {
-      tags: ['Categories'],
-      summary: 'Create a new category',
-      security: [{ bearerAuth: [] }],
-      requestBody: {
-        required: true,
-        content: {
-          'application/json': {
-            schema: {
-              type: 'object',
-              required: ['name'],
-              properties: {
-                name: { type: 'string' },
-                description: { type: 'string' }
-              }
-            }
-          }
-        }
-      },
-      responses: {
-        '201': {
-          description: 'Category created successfully'
-        }
-      }
-    }
-  },
-  '/orders': {
-    get: {
-      tags: ['Orders'],
-      summary: 'Get all orders for current user',
-      security: [{ bearerAuth: [] }],
-      responses: {
-        '200': {
-          description: 'List of orders'
-        }
-      }
-    },
-    post: {
-      tags: ['Orders'],
-      summary: 'Create a new order',
-      security: [{ bearerAuth: [] }],
-      requestBody: {
-        required: true,
-        content: {
-          'application/json': {
-            schema: {
-              type: 'object',
-              required: ['items', 'billing', 'shipping', 'payment'],
-              properties: {
-                items: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      product: { type: 'string' },
-                      quantity: { type: 'integer' }
+          ],
+          "responses": {
+            "200": {
+              "description": "Order cancelled successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": { "type": "boolean" },
+                      "message": { "type": "string" }
                     }
                   }
                 }
               }
+            },
+            "400": {
+              "description": "Bad request",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Order not found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
             }
           }
         }
-      },
-      responses: {
-        '201': {
-          description: 'Order created successfully'
-        }
       }
     }
-  }
-};
+  };
+}
 
 // API Documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
