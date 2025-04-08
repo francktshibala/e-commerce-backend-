@@ -18,12 +18,17 @@ const register = async (req, res, next) => {
       throw new ApiError(400, 'User with this email already exists');
     }
     
+    // Get user count - if first user, make admin
+    const userCount = await User.countDocuments();
+    const role = userCount === 0 ? 'admin' : 'customer';
+    
     // Create new user
     const user = new User({
       name,
       email,
       password,
-      method: 'local' // Local authentication
+      method: 'local', // Local authentication
+      role // Set to admin if first user
     });
     
     await user.save();
