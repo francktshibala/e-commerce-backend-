@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "E-Commerce API",
+    "title": "E-commerce Backend API",
     "description": "API documentation for the e-commerce backend with OAuth 2.0 authentication",
     "version": "1.0.0"
   },

@@ -170,36 +170,8 @@ const orderSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Generate unique order number
-orderSchema.pre('save', async function(next) {
-  try {
-    if (this.isNew) {
-      // Generate order number based on timestamp and random string
-      const timestamp = new Date().toISOString().replace(/[-:.TZ]/g, '');
-      const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-      this.orderNumber = `ORD-${timestamp.substring(0, 8)}-${random}`;
-      
-      // Add initial status to history
-      if (!this.statusHistory || this.statusHistory.length === 0) {
-        this.statusHistory = [{
-          status: this.status,
-          timestamp: new Date(),
-          comment: 'Order created'
-        }];
-      }
-    } else if (this.isModified('status')) {
-      // Add status change to history
-      this.statusHistory.push({
-        status: this.status,
-        timestamp: new Date()
-      });
-    }
-    
-    next();
-  } catch (error) {
-    next(error);
-  }
-});
+// Note: We've removed the pre-save middleware that was generating the orderNumber
+// since we're now handling it directly in the controller
 
 // Update inventory after order is placed
 orderSchema.post('save', async function() {

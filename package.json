@@ -1,5 +1,5 @@
 {
-    "name": "e-commerce-api",
+    "name": "e-commerce-backend",
     "version": "1.0.0",
     "description": "E-commerce platform API with OAuth authentication",
     "main": "server.js",

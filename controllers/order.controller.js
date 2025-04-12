@@ -24,6 +24,11 @@ const createOrder = async (req, res, next) => {
     if (!user) {
       throw new ApiError(404, 'User not found');
     }
+
+    // Generate order number
+    const timestamp = new Date().toISOString().replace(/[-:.TZ]/g, '');
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const orderNumber = `ORD-${timestamp.substring(0, 8)}-${random}`;
     
     // Initialize order items and calculations
     const orderItems = [];
@@ -78,6 +83,7 @@ const createOrder = async (req, res, next) => {
     
     // Create order
     const order = new Order({
+      orderNumber, // Add the generated orderNumber
       user: user._id,
       items: orderItems,
       billing,
@@ -88,7 +94,13 @@ const createOrder = async (req, res, next) => {
       discount: req.body.discount || { amount: 0 },
       total,
       notes,
-      status: 'pending'
+      status: 'pending',
+      // Initialize status history
+      statusHistory: [{
+        status: 'pending',
+        timestamp: new Date(),
+        comment: 'Order created'
+      }]
     });
     
     await order.save();
